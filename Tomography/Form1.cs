@@ -1,3 +1,5 @@
+using OpenTK.Graphics.OpenGL;
+
 namespace Tomography
 {
     public partial class Form1 : Form
@@ -6,34 +8,55 @@ namespace Tomography
         private View view = new View();
         private bool loaded = false;
         private int currentLayer = 0;
-        int FrameCount;
         DateTime NextFPSUpdate = DateTime.Now.AddSeconds(1);
         private System.Diagnostics.Stopwatch renderTimer = System.Diagnostics.Stopwatch.StartNew();
         private bool useQuads = true; // false - текстура, true - квады
 
-        void displayFPS()
-        {
-            FrameCount++;
+        private int frameCount = 0;
+        private System.Diagnostics.Stopwatch fpsTimer = System.Diagnostics.Stopwatch.StartNew();
 
-            if (DateTime.Now >= NextFPSUpdate)
+        private void UpdateFPS()
+        {
+            frameCount++;
+
+            if (fpsTimer.Elapsed.TotalSeconds >= 1.0)
             {
-                this.Invoke((MethodInvoker)delegate
+                double fps = frameCount / fpsTimer.Elapsed.TotalSeconds;
+                if (this.InvokeRequired)
                 {
-                    this.Text = $"CT Visualizer (fps = {FrameCount})";
-                });
-                NextFPSUpdate = DateTime.Now.AddSeconds(1);
-                FrameCount = 0;
+                    this.Invoke(new Action(() =>
+                    {
+                        this.Text = $"CT Visualizer (fps = {fps:0})";
+                    }));
+                }
+                else
+                {
+                    this.Text = $"CT Visualizer (fps = {fps:0})";
+                }
+
+                frameCount = 0;
+                fpsTimer.Restart();
             }
         }
 
         public Form1()
         {
             InitializeComponent();
+            fpsTimer.Start();
+
+            var timer = new System.Windows.Forms.Timer();
+            timer.Interval = 1;
+            timer.Tick += (s, args) =>
+            {
+                glControl2.Invalidate();
+            };
+            timer.Start();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             Application.Idle += Application_Idle;
+            System.Windows.Forms.Application.ThreadException += (s, e) => { }; // Игнорировать ошибки UI
         }
 
         private void открытьToolStripMenuItem_Click(object sender, EventArgs e)
@@ -67,6 +90,8 @@ namespace Tomography
         {
             if (loaded)
             {
+                GL.Finish();
+
                 if (needReload)
                 {
                     if (useQuads)
@@ -90,8 +115,10 @@ namespace Tomography
                     view.DrawTexture();
                 }
 
+                GL.Flush();
                 glControl2.SwapBuffers();
-                displayFPS();
+
+                UpdateFPS();
             }
         }
 
@@ -104,10 +131,7 @@ namespace Tomography
 
         void Application_Idle(object sender, EventArgs e)
         {
-            if (!glControl2.Focused)
-            {
-                glControl2.Invalidate();
-            }
+            glControl2.Invalidate();
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
