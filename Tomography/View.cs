@@ -90,9 +90,6 @@ namespace Tomography
                 (int)TextureMinFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
                 (int)TextureMagFilter.Linear);
-
-            ErrorCode Er = GL.GetError();
-            string str = Er.ToString();
         }
 
         public void GenerateTextureImage(int layerNumber)

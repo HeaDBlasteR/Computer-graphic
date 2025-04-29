@@ -8,8 +8,6 @@ namespace Tomography
         private View view = new View();
         private bool loaded = false;
         private int currentLayer = 0;
-        DateTime NextFPSUpdate = DateTime.Now.AddSeconds(1);
-        private System.Diagnostics.Stopwatch renderTimer = System.Diagnostics.Stopwatch.StartNew();
         private bool useQuads = true; // false - текстура, true - квады
 
         private int frameCount = 0;
